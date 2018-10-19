@@ -125,11 +125,7 @@ public class MediaPlayerHelper {
 //            return;
 //        }
         mFilePath = path;
-        isPrepareIng = false;
-        isReady = false;
-        isReadyToPlay = false;
-        mSetPlayerError = false;
-        seeTime = -1;
+        resetStatus();
         if (mMediaPlayer != null) {
             try {
                 mMediaPlayer.reset();
@@ -146,6 +142,14 @@ public class MediaPlayerHelper {
                 throwable.printStackTrace();
             }
         }
+    }
+
+    private void resetStatus() {
+        isPrepareIng = false;
+        isReady = false;
+        isReadyToPlay = false;
+        mSetPlayerError = false;
+        seeTime = -1;
     }
 
     private void prepare() {
@@ -217,7 +221,6 @@ public class MediaPlayerHelper {
         }
     }
 
-    /*MediaPlayer.seekTo 要在prepare之后*/
     public void setSeeTo(int time) {
 
         if (isReady) {

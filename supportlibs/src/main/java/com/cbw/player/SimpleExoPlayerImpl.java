@@ -97,7 +97,7 @@ public class SimpleExoPlayerImpl implements IPlayer {
 
     @Deprecated
     @Override
-    public void setDataSource(Object dataSource, @DataSourceType int type){
+    public void setDataSource(Object dataSource, @DataSourceType int type) {
 
         DataSource.Factory dataFactory = new DefaultDataSourceFactory(mContext, mUserAgent);
         Uri parse = Uri.parse((String) dataSource);
@@ -183,8 +183,10 @@ public class SimpleExoPlayerImpl implements IPlayer {
     @Override
     public void release() {
         mSimpleExoPlayer.release();
-        mMediaSource.releaseSource(null);
-        mMediaSource = null;
+        if (mMediaSource != null) {
+            mMediaSource.releaseSource(null);
+            mMediaSource = null;
+        }
     }
 
     @Override
