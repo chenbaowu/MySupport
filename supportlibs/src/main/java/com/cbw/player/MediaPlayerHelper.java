@@ -89,20 +89,23 @@ public class MediaPlayerHelper {
         mMediaPlayer.setOnPlayListener(mOnPlayListener);
     }
 
-    public String getFilePath() {
-        return mFilePath;
+    public MediaPlayerHelper(Context context, PlayerFactry playerFactry) {
+        mContext = context;
+        mMediaPlayer = playerFactry.CreatePlyer(context);
+        mMediaPlayer.setOnPlayListener(mOnPlayListener);
     }
 
     private void initMediaPlayer() {
-
-        if (mMediaPlayer == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mMediaPlayer = new MediaPlayerImpl(mContext);
-            } else {
-                mMediaPlayer = new SimpleExoPlayerImpl(mContext);
-            }
-            mMediaPlayer.setOnPlayListener(mOnPlayListener);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mMediaPlayer = new MediaPlayerImpl(mContext);
+        } else {
+            mMediaPlayer = new SimpleExoPlayerImpl(mContext);
         }
+        mMediaPlayer.setOnPlayListener(mOnPlayListener);
+    }
+
+    public String getFilePath() {
+        return mFilePath;
     }
 
     public void play(String path, boolean isLoop) {
