@@ -90,7 +90,7 @@ public class BaseUseRecycleView extends FrameLayout {
         for (int i = 0; i < 20; i++) {
             BaseItemInfo baseItemInfo = new BaseItemInfo();
             baseItemInfo.mItemType = BaseAdapter.ItemType_Base;
-            baseItemInfo.mRes = R.mipmap.ic_mk;
+            baseItemInfo.mRes = R.drawable.test;
             if (i == 2) {
                 baseItemInfo.mIsClickable = false;
             }

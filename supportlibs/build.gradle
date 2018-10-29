@@ -40,4 +40,7 @@ dependencies {
 
     /*谷歌第三方播放器*/
     implementation 'com.google.android.exoplayer:exoplayer-core:2.8.4'
+
+    /*图片加载*/
+    implementation 'com.github.bumptech.glide:glide:3.8.0'
 }

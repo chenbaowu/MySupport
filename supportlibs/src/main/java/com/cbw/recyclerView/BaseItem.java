@@ -1,6 +1,7 @@
 package com.cbw.recyclerView;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.util.TypedValue;
@@ -8,6 +9,8 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 /**
  * Created by cbw on 2018/10/25.
@@ -25,8 +28,12 @@ public class BaseItem extends AbsItem {
     public void setData(BaseItemInfo itemInfo, int position) {
         if (itemInfo.getRes() instanceof Integer) {
             mCover.setImageResource((Integer) itemInfo.getRes());
-            mInfo.setText(String.valueOf(position));
+        } else if (itemInfo.getRes() instanceof Bitmap) {
+            mCover.setImageBitmap((Bitmap) itemInfo.getRes());
+        } else {
+            Glide.with(getContext()).load(itemInfo.getRes()).into(mCover);
         }
+        mInfo.setText(String.valueOf(position));
     }
 
     @Override

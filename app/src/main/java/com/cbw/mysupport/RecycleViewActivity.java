@@ -10,7 +10,7 @@ import com.cbw.recyclerView.BaseUseRecycleView;
 /**
  * Created by cbw on 2018/10/25.
  */
-public class RecycleViewDemo extends Activity {
+public class RecycleViewActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
