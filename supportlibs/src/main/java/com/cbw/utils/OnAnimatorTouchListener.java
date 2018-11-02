@@ -15,7 +15,6 @@ import android.view.animation.LinearInterpolator;
 public abstract class OnAnimatorTouchListener implements View.OnTouchListener {
 
     public OnAnimatorTouchListener() {
-
         init();
     }
 
@@ -65,7 +64,11 @@ public abstract class OnAnimatorTouchListener implements View.OnTouchListener {
         return m_isDown;
     }
 
-    // 设置做动画的 view，如果不设置则使用 m_touch_view 做动画
+    /**
+     * 设置做动画的 view,如果不设置则使用 m_touch_view 做动画,仅处理一次就置空
+     *
+     * @param m_animator_view
+     */
     public void setAnimatorView(View m_animator_view) {
         this.m_animator_view = m_animator_view;
     }

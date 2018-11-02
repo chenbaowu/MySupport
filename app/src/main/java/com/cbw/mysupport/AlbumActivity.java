@@ -73,29 +73,34 @@ public class AlbumActivity extends Activity {
             public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
 
                 int left = 0;
-                int top = PercentUtil.WidthPxxToPercent(15);
-                int right = PercentUtil.WidthPxxToPercent(15);
+                int top = 0;
+                int right = 0;
                 int bottom = 0;
                 int childCount = parent.getAdapter().getItemCount();
                 int itemPosition = parent.getChildAdapterPosition(view);
 
                 if (mLayoutManager instanceof GridLayoutManager) {
                     int spanCount = ((GridLayoutManager) mLayoutManager).getSpanCount();
-                    if ((itemPosition + 1) % spanCount == 0)// 如果是最后一列，则不需要绘制右边
-                    {
-//                        right = 0;
+
+                    if (itemPosition % spanCount == 0) { //第一列
+                        left = PercentUtil.WidthPxxToPercent(15);
+                    } else if ((itemPosition + 1) % spanCount == 0) { // 最后一列
+                        right = PercentUtil.WidthPxxToPercent(15);
                     }
                 }
-
                 outRect.set(left, top, right, bottom);
             }
         });
 
         ArrayList<BaseItemInfo> baseItemInfoList = new ArrayList<>();
-        for (int i = 0; i < AlbumUtils.mAlbumBeans.size(); i++) {
+        for (
+                int i = 0; i < AlbumUtils.mAlbumBeans.size(); i++)
+
+        {
             BaseItemInfo baseItemInfo = new BaseItemInfo();
             baseItemInfo.mItemType = BaseAdapter.ItemType_Base;
-            baseItemInfo.mRes = AlbumUtils.mAlbumBeans.get(i).mImagePath;
+//            baseItemInfo.mRes = AlbumUtils.mAlbumBeans.get(i).mImagePath;
+            baseItemInfo.mRes = R.drawable.test;
             baseItemInfoList.add(baseItemInfo);
         }
         adapter_album.setData(baseItemInfoList);
