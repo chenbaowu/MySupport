@@ -16,6 +16,9 @@ public class PathUtil {
     /*APP 文件夹*/
     private static String PATH_APP;
 
+    /*临时文件*/
+    private static String PATH_TEMP;
+
     /**
      * 获取APP路径，带'/'
      */
@@ -28,6 +31,19 @@ public class PathUtil {
 
         FileUtil.MakeFolder(PATH_APP);
         return PATH_APP;
+    }
+
+    /**
+     * 获取APP路径，带'/'
+     */
+    public static String GetTempPath() {
+
+        if (PATH_TEMP == null) {
+            PATH_TEMP = PATH_APP + "/temp/";
+        }
+
+        FileUtil.MakeFolder(PATH_TEMP);
+        return PATH_TEMP;
     }
 
     /**

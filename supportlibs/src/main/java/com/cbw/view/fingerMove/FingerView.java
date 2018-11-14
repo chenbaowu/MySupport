@@ -19,7 +19,7 @@ import com.cbw.supportlibs.R;
  * 底图 加 可操作装饰
  */
 
-public class FingerView extends BaseView {
+public class FingerView extends com.cbw.view.fingerMove.BaseView {
 
     private int W, H;
 

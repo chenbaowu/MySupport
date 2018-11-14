@@ -89,9 +89,9 @@ public class MediaPlayerHelper {
         mMediaPlayer.setOnPlayListener(mOnPlayListener);
     }
 
-    public MediaPlayerHelper(Context context, PlayerFactry playerFactry) {
+    public MediaPlayerHelper(Context context, PlayerFactory playerFactory) {
         mContext = context;
-        mMediaPlayer = playerFactry.CreatePlyer(context);
+        mMediaPlayer = playerFactory.CreatePlyer(context);
         mMediaPlayer.setOnPlayListener(mOnPlayListener);
     }
 

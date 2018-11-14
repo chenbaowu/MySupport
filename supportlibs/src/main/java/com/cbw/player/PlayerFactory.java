@@ -5,7 +5,7 @@ import android.content.Context;
 /**
  * Created by cbw on 2018/10/25.
  */
-public interface PlayerFactry {
+public interface PlayerFactory {
 
     IPlayer CreatePlyer(Context context);
 }

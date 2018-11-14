@@ -13,6 +13,7 @@ import android.widget.FrameLayout;
 
 import com.cbw.bean.BaseVideoInfo;
 import com.cbw.player.MediaPlayerHelper;
+import com.cbw.utils.PathUtil;
 
 /**
  * 播放器测试demo
@@ -33,9 +34,9 @@ public class PlayerActivity extends AppCompatActivity implements SurfaceHolder.C
 
     private void init() {
         String mFilePath = "http://www.pearvideo.com/video_1443809";
-//        mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/test.mp4";
+        mFilePath = PathUtil.GetAppPath(this) + "/test.mp4";
 //        mFilePath = "test.mp4";
-        mFilePath = "android.resource://" + this.getPackageName() + "/" + R.raw.test;
+//        mFilePath = "android.resource://" + this.getPackageName() + "/" + R.raw.test;
 
         surfaceView = this.findViewById(R.id.surfaceView);
         mediaPlayerHelper = new MediaPlayerHelper(this, MediaPlayerHelper.PlayerType.SimpleExoPlayer);
@@ -84,6 +85,7 @@ public class PlayerActivity extends AppCompatActivity implements SurfaceHolder.C
             @Override
             public void run() {
                 textureView.animate().rotation(180).setDuration(1000).start();
+                surfaceView.animate().rotation(360).setDuration(1000).start();
             }
         }, 3000);
     }
