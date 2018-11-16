@@ -18,6 +18,13 @@ android {
     }
 }
 
+apply plugin: 'org.greenrobot.greendao'
+greendao {
+    schemaVersion 1 // 数据库版本号
+    daoPackage 'com.cbw.greendao'// 设置DaoMaster、DaoSession、Dao包名
+    targetGenDir 'src/main/java' // 设置DaoMaster、DaoSession、Dao目录
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -30,4 +37,6 @@ dependencies {
     implementation project(':supportlibs')
 
     implementation 'com.github.bumptech.glide:glide:3.8.0'
+
+    implementation 'org.greenrobot:greendao:3.2.2'
 }
