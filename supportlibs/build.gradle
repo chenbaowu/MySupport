@@ -43,7 +43,11 @@ dependencies {
     /*图片加载*/
     implementation 'com.github.bumptech.glide:glide:3.8.0'
 
-    /*RxJava2.0+Retrofit2.0+OkHttp*/
-    implementation 'com.squareup.retrofit:retrofit:2.0.0-beta2'
-    implementation 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+    /*RxJava2Test.x+Retrofit2.x+OkHttp*/
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
 }

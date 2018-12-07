@@ -6,11 +6,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.cbw.bean.User;
 import com.cbw.greendao.DaoMaster;
 import com.cbw.greendao.DaoSession;
+import com.cbw.web.test.RxJava2Test;
 import com.cbw.utils.OnAnimatorTouchListener;
+import com.cbw.web.test.RetrofitTest;
 
 import java.util.ArrayList;
 
@@ -28,6 +31,8 @@ public class DbActivity extends Activity {
         init();
     }
 
+    private TextView tv_show;
+
     private void init() {
         initGreenDao();
 
@@ -35,6 +40,7 @@ public class DbActivity extends Activity {
         this.findViewById(R.id.btn_delete).setOnTouchListener(animatorTouchListener);
         this.findViewById(R.id.btn_update).setOnTouchListener(animatorTouchListener);
         this.findViewById(R.id.btn_find).setOnTouchListener(animatorTouchListener);
+        tv_show = this.findViewById(R.id.tv_show);
     }
 
     /**
@@ -70,10 +76,11 @@ public class DbActivity extends Activity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                     break;
                 case R.id.btn_delete:
                     daoSession.getUserDao().deleteAll();
+
+                    new RxJava2Test().init();
                     break;
                 case R.id.btn_update:
                     break;
@@ -82,6 +89,8 @@ public class DbActivity extends Activity {
                     for (int j = 0; j < users.size(); j++) {
                         Log.i("bbb", "user: " + users.get(j).toString());
                     }
+
+                    new RetrofitTest();
                     break;
             }
         }
