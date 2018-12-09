@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.support.v4.math.MathUtils;
+import android.util.SparseArray;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -16,13 +17,13 @@ import java.util.List;
 /**
  * Created by cbw on 2018/12/4.
  */
-public class Camera1 implements ICamera, ICamera.OnCameraCallback {
+public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
 
     private Context mContext;
 
     private Camera mCamera;
     private int mCameraNumber;
-    private Camera.Parameters mCameraParameters;
+    private SparseArray<Camera.CameraInfo> mCameraInfoMap = new SparseArray();
     private SurfaceHolder mSurfaceHolder;
     private OnCameraCallback mOnCameraCallback;
 
@@ -37,9 +38,9 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     private int mDisplayOrientation = -1;
 
     /**
-     * 拍照照片的角度
+     * 照片的角度
      */
-    private int mPictureDegrees = -1;
+    private int mPictureRotation = -1;
 
     /**
      * 预览Size
@@ -47,7 +48,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     private int mPreviewWith = 1440, mPreviewHeight = 1080;
 
     /**
-     * 拍照图片Size
+     * 图片Size
      */
     private int mPictureWith = 1440, mPictureHeight = 1080;
 
@@ -59,7 +60,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      */
     private int mPreviewSizeType = 0, mPictureSizeType = 0;
 
-    public Camera1(Context context) {
+    public CameraV1(Context context) {
         mContext = context;
 
         getCameraInfo();
@@ -75,7 +76,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     }
 
     /**
-     * 设置预览size
+     * Set preview size
      *
      * @param with
      * @param height
@@ -88,7 +89,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     }
 
     /**
-     * 设置拍照图片size
+     * Set picture size
      *
      * @param with
      * @param height
@@ -104,12 +105,18 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
         return mCamera;
     }
 
-    /**
-     * 获取镜头信息
-     * TODO 记录起来？
-     */
     private void getCameraInfo() {
         mCameraNumber = Camera.getNumberOfCameras();
+
+        for (int i = 0; i < mCameraNumber; i++) {
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            try {
+                Camera.getCameraInfo(i, cameraInfo);
+                mCameraInfoMap.put(i, cameraInfo);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -124,6 +131,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
         try {
             mCamera = Camera.open(mCameraId);
             mCamera.setErrorCallback(this);
+            Camera.Parameters mCameraParameters = mCamera.getParameters();
 
             setOptimalPreviewSize(mPreviewWith, mPreviewHeight);
             setOptimalPictureSize(mPictureWith, mPictureHeight);
@@ -134,13 +142,16 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
         } catch (Exception e) {
             e.printStackTrace();
             if (mOnCameraCallback != null) {
-                mOnCameraCallback.onError(0, null);
+                mOnCameraCallback.onError(ICamera.CAMERA_ERROR_OPEN_FAIL, null);
             }
         }
     }
 
     @Override
     public void takePicture() {
+
+        if (checkErrorStatus()) return;
+
         try {
             mCamera.takePicture(mEnableShutterSound ? this : null, null, this);
         } catch (Exception e) {
@@ -150,18 +161,40 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
         }
     }
 
+    /**
+     * Set picture format
+     *
+     * @see android.graphics.ImageFormat
+     * @see Camera.Parameters#getSupportedPictureFormats()
+     */
+    @Override
+    public void setPictureFormat(int pixel_format) {
+
+        if (checkErrorStatus()) return;
+
+        try {
+            Camera.Parameters mCameraParameters = mCamera.getParameters();
+            mCameraParameters.setPictureFormat(pixel_format);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private String mFlashMode;
 
     /**
-     * 设置闪关灯模式
+     * Set flashMode
      *
      * @param flashMode
      * @see Camera.Parameters#FOCUS_MODE_AUTO
      */
     public void setFlashMode(String flashMode) {
-        mCameraParameters = mCamera.getParameters();
+
+        if (checkErrorStatus()) return;
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
+
         List<String> mSupportedFlashModes = mCameraParameters.getSupportedFlashModes();
-        if (mSupportedFlashModes.contains(flashMode)) {
+        if (mSupportedFlashModes != null && mSupportedFlashModes.contains(flashMode)) {
             mCameraParameters.setFlashMode(flashMode);
             mCamera.setParameters(mCameraParameters);
             mFlashMode = flashMode;
@@ -171,15 +204,18 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     private String mFocusMode;
 
     /**
-     * 设置对焦模式
+     * Set focusMode
      *
      * @param focusMode
      * @see Camera.Parameters#FOCUS_MODE_INFINITY
      */
     public void setFocusMode(String focusMode) {
-        mCameraParameters = mCamera.getParameters();
+
+        if (checkErrorStatus()) return;
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
+
         List<String> mSupportedFocusModes = mCameraParameters.getSupportedFocusModes();
-        if (mSupportedFocusModes.contains(focusMode)) {
+        if (mSupportedFocusModes != null && mSupportedFocusModes.contains(focusMode)) {
             mCameraParameters.setFocusMode(focusMode);
             mCamera.setParameters(mCameraParameters);
             mFocusMode = focusMode;
@@ -188,7 +224,7 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
 
     /**
      * 设置对焦区域和测光区域<br/>
-     * setFocusAreas接受的List<Camera.Area>中的每一个Area的范围是（-1000，-1000）到（1000， 1000）<br/>
+     * List<Camera.Area>中的每一个Area的范围是（-1000，-1000）到（1000， 1000）<br/>
      * 也就是说屏幕中心为原点，左上角为（-1000，-1000），右下角为（1000，1000）
      *
      * @param focusX
@@ -199,7 +235,8 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      */
     public void setFocusAndMeteringArea(float focusX, float focusY, float meteringX, float meteringY, float ratio) {
 
-        mCameraParameters = mCamera.getParameters();
+        if (checkErrorStatus()) return;
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
 
         boolean mFocusAreaSupported = mCameraParameters.getMaxNumFocusAreas() > 0;
         if (focusX != -1 && focusY != -1 && mFocusAreaSupported) {
@@ -239,16 +276,22 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     }
 
     /**
-     * 设置预览方向
+     * Set the clockwise rotation of preview display in degrees
      *
      * @param orientation 角度 , 如果是 -1 则计算默认值
      */
     public void setDisplayOrientation(int orientation) {
 
+        if (checkErrorStatus()) return;
+
         int result;
         if (orientation == -1) {
-            int rotation = ((Activity) mContext).getWindowManager().getDefaultDisplay().getRotation();
+            Camera.CameraInfo cameraInfo = mCameraInfoMap.get(mCameraId);
+            if (cameraInfo == null) {
+                return;
+            }
 
+            int rotation = ((Activity) mContext).getWindowManager().getDefaultDisplay().getRotation();
             int degrees = 0;
             switch (rotation) {
                 case Surface.ROTATION_0:
@@ -265,10 +308,6 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
                     break;
             }
 
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(mCameraId, cameraInfo);
-            mPictureDegrees = cameraInfo.orientation;
-
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 result = (cameraInfo.orientation + degrees) % 360;
                 result = (360 - result) % 360;  // compensate the mirror
@@ -281,11 +320,31 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
 
         try {
             mCamera.setDisplayOrientation(result);
-            mDisplayOrientation = orientation;
+            mDisplayOrientation = result;
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * The camera driver may set orientation in the EXIF header without rotating the picture
+     *
+     * @param screenRotation 屏幕角度
+     */
+    public void setPictureRotation(int screenRotation) {
+
+        if (checkErrorStatus()) return;
+
+        try {
+            int result = getPictureDegrees(screenRotation);
+            Camera.Parameters mCameraParameters = mCamera.getParameters();
+            mCameraParameters.setRotation(result);
+            mPictureRotation = result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * 有些机型需要在takePicture时将ShutterCallback置为null，拍照才没声音
@@ -299,6 +358,9 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      * @param enabled
      */
     public void setShutterSound(boolean enabled) {
+
+        if (checkErrorStatus()) return;
+
         try {
             mCamera.enableShutterSound(enabled);
             mEnableShutterSound = enabled;
@@ -314,7 +376,9 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      */
     public void setExposureValue(int exposureValue) {
 
-        mCameraParameters = mCamera.getParameters();
+        if (checkErrorStatus()) return;
+
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
         if (exposureValue < mCameraParameters.getMinExposureCompensation()) {
             exposureValue = mCameraParameters.getMinExposureCompensation();
         } else if (exposureValue > mCameraParameters.getMaxExposureCompensation()) {
@@ -330,7 +394,10 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      * @param value 焦距
      */
     public void setCameraZoom(int value) {
-        mCameraParameters = mCamera.getParameters();
+
+        if (checkErrorStatus()) return;
+
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
         if (mCameraParameters.isZoomSupported()) {
             value = MathUtils.clamp(value, 0, mCameraParameters.getMaxZoom());
             mCameraParameters.setZoom(value);
@@ -342,8 +409,8 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
      * 设置预览size，在开始预览之前设置
      */
     private void setOptimalPreviewSize(int width, int height) {
-
-        mCameraParameters = mCamera.getParameters();
+        
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
         List<Camera.Size> mSupportedPreviewSizes = sortCameraSizes(mCameraParameters.getSupportedPreviewSizes(), true);
 
         Camera.Size mPreviewSize = null;
@@ -371,11 +438,11 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     }
 
     /**
-     * 设置拍照图片size，在开始预览之前设置
+     * 设置图片size，在开始预览之前设置
      */
     private void setOptimalPictureSize(int width, int height) {
-
-        mCameraParameters = mCamera.getParameters();
+        
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
         List<Camera.Size> mSupportedPictureSizes = sortCameraSizes(mCameraParameters.getSupportedPictureSizes(), true);
 
         Camera.Size mPictureSize = getOptimalSize(mSupportedPictureSizes, width, height, mPictureSizeType);
@@ -531,22 +598,46 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     public void releaseCamera() {
         if (mCamera != null) {
             mCamera.release();
-            mCamera = null;
-            mCameraParameters = null;
         }
+        mCamera = null;
+        mDisplayOrientation = -1;
+        mPictureRotation = -1;
+
+    }
+
+    private boolean checkErrorStatus() {
+        return mCamera == null;
     }
 
     public int getDisplayOrientation() {
         return mDisplayOrientation;
     }
 
-    public int getPictureDegrees() {
-        return mPictureDegrees;
+    /**
+     * 获取照片角度
+     *
+     * @param screenRotation 屏幕角度
+     * @return
+     */
+    public int getPictureDegrees(int screenRotation) {
+
+        Camera.CameraInfo cameraInfo = mCameraInfoMap.get(mCameraId);
+        if (cameraInfo == null) {
+            return 0;
+        }
+
+        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            mPictureRotation = (cameraInfo.orientation - screenRotation + 360) % 360;
+        } else {  // back-facing camera
+            mPictureRotation = (cameraInfo.orientation + screenRotation) % 360;
+        }
+        return mPictureRotation;
     }
 
     @Override
     public void onAutoFocus(boolean success, Camera camera) {
 
+        Camera.Parameters mCameraParameters = mCamera.getParameters();
         if (mFlashMode != null && !mCameraParameters.getFlashMode().equals(mFlashMode)) {
             setFlashMode(mFlashMode);
         }
@@ -571,6 +662,8 @@ public class Camera1 implements ICamera, ICamera.OnCameraCallback {
     @Override
     public void onError(int error, Camera camera) {
         switch (error) {
+            case ICamera.CAMERA_ERROR_OPEN_FAIL:
+                break;
             case Camera.CAMERA_ERROR_EVICTED:
                 break;
             case Camera.CAMERA_ERROR_SERVER_DIED:

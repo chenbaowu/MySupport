@@ -1,22 +1,28 @@
 package com.cbw.mysupport;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.cbw.Camera.Camera1;
+import com.cbw.Camera.CameraV1;
 import com.cbw.Camera.ICamera;
 import com.cbw.utils.OnAnimatorTouchListener;
 
@@ -32,6 +38,9 @@ public class CameraActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_test);
+
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
+
         init();
     }
 
@@ -64,7 +73,7 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 if (camera1 == null) {
-                    camera1 = new Camera1(mContext);
+                    camera1 = new CameraV1(mContext);
                     camera1.setCameraCallback(new ICamera.OnCameraCallback() {
                         @Override
                         public void onAutoFocus(boolean success, Camera camera) {
@@ -80,9 +89,9 @@ public class CameraActivity extends AppCompatActivity {
                         public void onPictureTaken(byte[] data, Camera camera) {
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                             iv_pic.setImageBitmap(bitmap);
-                            iv_pic.setRotation(camera1.getPictureDegrees());
+                            iv_pic.setRotation(camera1.getPictureDegrees(mScreenRotation));
                             iv_pic.setVisibility(View.VISIBLE);
-                            Log.i("bbb", "onPictureTaken: " + bitmap.getWidth() + "," + bitmap.getHeight());
+                            Log.i("bbb", "onPictureTaken: "+ bitmap.getWidth() + "," + bitmap.getHeight() +   " ,mScreenRotation: " + mScreenRotation);
                         }
 
                         @Override
@@ -110,9 +119,34 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
 
+
+        mOrientationListener = new OrientationEventListener(this,
+                SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+
+                if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) { //手机平放时，检测不到有效的角度
+                    return;
+                }
+
+                if (orientation > 350 || orientation < 10) { //0度
+                    mScreenRotation = 0;
+                } else if (orientation > 80 && orientation < 100) { //90度
+                    mScreenRotation = 90;
+                } else if (orientation > 170 && orientation < 190) { //180度
+                    mScreenRotation = 180;
+                } else if (orientation > 260 && orientation < 280) { //270度
+                    mScreenRotation = 270;
+                }
+            }
+        };
+
+        mOrientationListener.enable();
     }
 
-    private Camera1 camera1;
+    private int mScreenRotation;
+    private CameraV1 camera1;
+    private OrientationEventListener mOrientationListener;
 
     private OnAnimatorTouchListener animatorTouchListener = new OnAnimatorTouchListener() {
         @Override
@@ -123,6 +157,7 @@ public class CameraActivity extends AppCompatActivity {
                     if (camera1 != null) {
                         camera1.setExposureValue(6);
                         camera1.setCameraZoom(10);
+                        camera1.setPictureFormat(ImageFormat.RGB_565);
                     }
                     break;
                 case R.id.btn_delete:
@@ -155,6 +190,7 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         public boolean onActionDown(View v, MotionEvent event) {
             if (v == surfaceView) {
+                iv_pic.setVisibility(View.GONE);
                 if (camera1 != null && camera1.getCamera() != null) {
                     camera1.setFocusAndMeteringArea(event.getX(), event.getY(), event.getX(), event.getY(), 1);
                 }
@@ -163,4 +199,10 @@ public class CameraActivity extends AppCompatActivity {
             return super.onActionDown(v, event);
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
 }

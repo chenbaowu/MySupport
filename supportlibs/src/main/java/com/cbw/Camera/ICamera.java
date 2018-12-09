@@ -8,6 +8,8 @@ import android.view.SurfaceHolder;
  */
 public interface ICamera {
 
+    int CAMERA_ERROR_OPEN_FAIL = 0;
+
     void setCameraCallback(OnCameraCallback onCameraCallback);
 
     void setSurface(SurfaceHolder surfaceHolder);
@@ -19,6 +21,8 @@ public interface ICamera {
     void openCamera(int id);
 
     void takePicture();
+
+    void setPictureFormat(int pixel_format);
 
     void setFlashMode(String flashMode);
 
@@ -38,7 +42,7 @@ public interface ICamera {
 
     int getDisplayOrientation();
 
-    int getPictureDegrees();
+    int getPictureDegrees(int screenRotation);
 
     interface OnCameraCallback extends Camera.AutoFocusCallback, Camera.ShutterCallback, Camera.PreviewCallback, Camera.PictureCallback, Camera.ErrorCallback {
     }
