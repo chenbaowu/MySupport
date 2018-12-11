@@ -1,6 +1,5 @@
 package com.cbw.mysupport;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -10,7 +9,7 @@ import com.cbw.recyclerView.BaseUseRecycleView;
 /**
  * Created by cbw on 2018/10/25.
  */
-public class RecycleViewActivity extends Activity {
+public class RecycleViewActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

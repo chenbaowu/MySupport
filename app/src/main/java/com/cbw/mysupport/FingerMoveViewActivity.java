@@ -1,6 +1,5 @@
 package com.cbw.mysupport;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,7 +15,7 @@ import com.cbw.view.fingerMove.MoveViewGroup;
  * Created by cbw on 2017/6/6.
  */
 
-public class FingerMoveViewActivity extends Activity implements View.OnClickListener {
+public class FingerMoveViewActivity extends BaseActivity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

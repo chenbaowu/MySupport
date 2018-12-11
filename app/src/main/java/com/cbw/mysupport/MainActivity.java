@@ -2,12 +2,11 @@ package com.cbw.mysupport;
 
 import android.media.MediaFormat;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 
 import com.cbw.mediaCodec.base.AudioCodec;
 import com.cbw.utils.PathUtil;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

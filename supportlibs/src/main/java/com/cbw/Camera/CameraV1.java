@@ -2,9 +2,11 @@ package com.cbw.Camera;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.support.v4.math.MathUtils;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -33,6 +35,11 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
     private int mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
 
     /**
+     * 图像传感器方向
+     */
+    private int mSensorOrientation;
+
+    /**
      * 当前镜头的预览角度
      */
     private int mDisplayOrientation = -1;
@@ -41,6 +48,20 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      * 照片的角度
      */
     private int mPictureRotation = -1;
+
+    /**
+     * 用于对焦测光换算 屏幕坐标 - 传感器图像坐标
+     *
+     * @see #initAreaMatrix()
+     * @see #setFocusAndMeteringArea(float, float, float, float)
+     * @see #calculateCameraArea(float, float, float, float)
+     */
+    private Matrix mAreaMatrix = new Matrix();
+
+    /**
+     * surface的Size
+     */
+    private int mSurfaceWith = 1080, mSurfaceHeight = 1440;
 
     /**
      * 预览Size
@@ -63,7 +84,7 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
     public CameraV1(Context context) {
         mContext = context;
 
-        getCameraInfo();
+        getCameraInfo(-1);
     }
 
     @Override
@@ -83,6 +104,8 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      * @param sizeType {@link #mPreviewSizeType}
      */
     public void setPreviewSize(int with, int height, int sizeType) {
+        mSurfaceWith = with;
+        mSurfaceHeight = height;
         mPreviewWith = with;
         mPreviewHeight = height;
         mPreviewSizeType = sizeType;
@@ -105,46 +128,73 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
         return mCamera;
     }
 
-    private void getCameraInfo() {
-        mCameraNumber = Camera.getNumberOfCameras();
+    private Camera.CameraInfo getCameraInfo(int id) {
+        if (id == -1) { // 初始化
+            mCameraNumber = Camera.getNumberOfCameras();
 
-        for (int i = 0; i < mCameraNumber; i++) {
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            try {
-                Camera.getCameraInfo(i, cameraInfo);
-                mCameraInfoMap.put(i, cameraInfo);
-            } catch (Exception e) {
-                e.printStackTrace();
+            for (int i = 0; i < mCameraNumber; i++) {
+                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                try {
+                    Camera.getCameraInfo(i, cameraInfo);
+                    mCameraInfoMap.put(i, cameraInfo);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+        } else { // 获取
+
+            Camera.CameraInfo cameraInfo = mCameraInfoMap.get(id);
+            if (cameraInfo == null) {
+                cameraInfo = new Camera.CameraInfo();
+                try {
+                    Camera.getCameraInfo(id, cameraInfo);
+                    mCameraInfoMap.put(id, cameraInfo);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    cameraInfo = new Camera.CameraInfo();
+                    if (id == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        cameraInfo.orientation = 270;
+                    } else {
+                        cameraInfo.orientation = 90;
+                    }
+                }
+            }
+            mSensorOrientation = cameraInfo.orientation;
+            return cameraInfo;
         }
+
+        return null;
     }
 
     @Override
     public void openCamera(int id) {
 
-        mCameraId = id;
         if (id >= mCameraNumber) {
-            mCameraId = 0;
+            return;
         }
         releaseCamera();
 
+        mCameraStatus = CameraState.CAMERA_WAIT_OPEN;
         try {
-            mCamera = Camera.open(mCameraId);
+            mCamera = Camera.open(id);
+            mCameraId = id;
             mCamera.setErrorCallback(this);
-            Camera.Parameters mCameraParameters = mCamera.getParameters();
+            getCameraInfo(id);
 
             setOptimalPreviewSize(mPreviewWith, mPreviewHeight);
             setOptimalPictureSize(mPictureWith, mPictureHeight);
 
+            initAreaMatrix();
             setDisplayOrientation(-1);
             startPreview();
-
         } catch (Exception e) {
             e.printStackTrace();
+            mCameraStatus = CameraState.CAMERA_IDLE;
             if (mOnCameraCallback != null) {
                 mOnCameraCallback.onError(ICamera.CAMERA_ERROR_OPEN_FAIL, null);
             }
         }
+        mCameraStatus = CameraState.CAMERA_OPEN;
     }
 
     @Override
@@ -222,6 +272,32 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
         }
     }
 
+    private void initAreaMatrix() {
+
+        mAreaMatrix.reset();
+        if (mSensorOrientation == 0) return;
+
+        final int width = mSurfaceWith;
+        final int height = mSurfaceHeight;
+
+        float[] srcPoints = new float[]{0, 0, 0, height, width, height, width, 0};
+        float[] dstPoints = null;
+        switch (mSensorOrientation) {
+            case 90:
+                dstPoints = new float[]{0, width, height, width, height, 0, 0, 0};
+                break;
+            case 180:
+                dstPoints = new float[]{0, width, height, 0, 0, 0, height, width}; // TODO need test
+                break;
+            case 270:
+                dstPoints = new float[]{height, width, 0, width, 0, 0, height, 0};
+                break;
+        }
+        if (dstPoints != null) {
+            mAreaMatrix.setPolyToPoly(srcPoints, 0, dstPoints, 0, 4);
+        }
+    }
+
     /**
      * 设置对焦区域和测光区域<br/>
      * List<Camera.Area>中的每一个Area的范围是（-1000，-1000）到（1000， 1000）<br/>
@@ -231,9 +307,8 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      * @param focusY
      * @param meteringX
      * @param meteringY
-     * @param ratio     镜头预览尺寸与UI尺寸的比例
      */
-    public void setFocusAndMeteringArea(float focusX, float focusY, float meteringX, float meteringY, float ratio) {
+    public void setFocusAndMeteringArea(float focusX, float focusY, float meteringX, float meteringY) {
 
         if (checkErrorStatus()) return;
         Camera.Parameters mCameraParameters = mCamera.getParameters();
@@ -241,7 +316,7 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
         boolean mFocusAreaSupported = mCameraParameters.getMaxNumFocusAreas() > 0;
         if (focusX != -1 && focusY != -1 && mFocusAreaSupported) {
             List<Camera.Area> focusAreas = new ArrayList<>();
-            Rect focusRect = calculateCameraArea(true, 300, 1f, focusX, focusY, ratio);
+            Rect focusRect = calculateCameraArea(300, 1f, focusX, focusY);
             if (focusRect != null) {
                 mCamera.cancelAutoFocus();
 
@@ -249,11 +324,6 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
                 String flashMode = mCameraParameters.getFlashMode();
                 if (Camera.Parameters.FLASH_MODE_ON.equals(flashMode) || Camera.Parameters.FLASH_MODE_AUTO.equals(flashMode)) {
                     mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                }
-
-                mFocusMode = mCameraParameters.getFocusMode();
-                if (!mFocusMode.equals(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                    mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
                 }
 
                 focusAreas.add(new Camera.Area(focusRect, 1000));
@@ -265,14 +335,18 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
         boolean mMeteringSupported = mCameraParameters.getMaxNumMeteringAreas() > 0;
         if (meteringX != -1 && meteringY != -1 && mMeteringSupported) {
             List<Camera.Area> meteringAreas = new ArrayList<>();
-            Rect meteringRect = calculateCameraArea(false, 300, 1.5f, meteringX, meteringY, ratio);
+            Rect meteringRect = calculateCameraArea(300, 1.5f, meteringX, meteringY);
             if (meteringRect != null) {
                 meteringAreas.add(new Camera.Area(meteringRect, 1000));
                 mCameraParameters.setMeteringAreas(meteringAreas);
             }
         }
 
-        mCamera.setParameters(mCameraParameters);
+        try {
+            mCamera.setParameters(mCameraParameters);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -286,10 +360,6 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
 
         int result;
         if (orientation == -1) {
-            Camera.CameraInfo cameraInfo = mCameraInfoMap.get(mCameraId);
-            if (cameraInfo == null) {
-                return;
-            }
 
             int rotation = ((Activity) mContext).getWindowManager().getDefaultDisplay().getRotation();
             int degrees = 0;
@@ -308,11 +378,11 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
                     break;
             }
 
-            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                result = (cameraInfo.orientation + degrees) % 360;
+            if (mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                result = (mSensorOrientation + degrees) % 360;
                 result = (360 - result) % 360;  // compensate the mirror
             } else {  // back-facing
-                result = (cameraInfo.orientation - degrees + 360) % 360;
+                result = (mSensorOrientation - degrees + 360) % 360;
             }
         } else {
             result = orientation;
@@ -409,7 +479,7 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      * 设置预览size，在开始预览之前设置
      */
     private void setOptimalPreviewSize(int width, int height) {
-        
+
         Camera.Parameters mCameraParameters = mCamera.getParameters();
         List<Camera.Size> mSupportedPreviewSizes = sortCameraSizes(mCameraParameters.getSupportedPreviewSizes(), true);
 
@@ -441,7 +511,7 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      * 设置图片size，在开始预览之前设置
      */
     private void setOptimalPictureSize(int width, int height) {
-        
+
         Camera.Parameters mCameraParameters = mCamera.getParameters();
         List<Camera.Size> mSupportedPictureSizes = sortCameraSizes(mCameraParameters.getSupportedPictureSizes(), true);
 
@@ -546,35 +616,32 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      *
      * @param areaBaseSize 对焦框（测光框）基本大小
      * @param coefficient  设置对焦框（测光框）的大小，作为百分比进行调节。
-     * @param ratio        镜头预览尺寸与UI尺寸的比例
      * @return
      */
-    private Rect calculateCameraArea(boolean isFocusRect, float areaBaseSize, float coefficient, float x, float y, float ratio) {
+    private Rect calculateCameraArea(float areaBaseSize, float coefficient, float x, float y) {
         if (mPreviewWith < 0 || mPreviewHeight < 0 || x < 0 || y < 0) {
             return null;
         }
+
+        float[] points = new float[]{x, y};
+        mAreaMatrix.mapPoints(points);
+        x = points[0];
+        y = points[1];
+
         int areaSize = (int) (areaBaseSize * coefficient);
-        if (ratio <= 0) {
-            ratio = 1.0f;
-        }
-        int centerX = (int) (y * ratio / mPreviewWith * 2000 - 1000);
-        int centerY = (int) (x * ratio / mPreviewHeight * 2000 - 1000);
+        float ratio;
+        ratio = mPreviewWith * 1.0f / mSurfaceHeight;
+
+        int centerX = (int) (x * ratio / mPreviewWith * 2000 - 1000);
+        int centerY = (int) (y * ratio / mPreviewHeight * 2000 - 1000);
 
         int left = MathUtils.clamp(centerX - areaSize / 2, -1000, 1000);
         int right = MathUtils.clamp(left + areaSize, -1000, 1000);
         int top = MathUtils.clamp(centerY - areaSize / 2, -1000, 1000);
         int bottom = MathUtils.clamp(top + areaSize, -1000, 1000);
 
-        Rect result;
-        if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
-            result = new Rect(left, -bottom, right, -top);
-        } else {
-            if (isFocusRect) {
-                result = new Rect(left, top, right, bottom);
-            } else {
-                result = new Rect(-right, -bottom, -left, -top);
-            }
-        }
+        Rect result = new Rect(left, top, right, bottom);
+        Log.i("bbb", result.toShortString());
         return result;
     }
 
@@ -605,8 +672,10 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
 
     }
 
+    private int mCameraStatus = CameraState.CAMERA_IDLE;
+
     private boolean checkErrorStatus() {
-        return mCamera == null;
+        return mCameraStatus == CameraState.CAMERA_IDLE;
     }
 
     public int getDisplayOrientation() {
@@ -621,15 +690,10 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
      */
     public int getPictureDegrees(int screenRotation) {
 
-        Camera.CameraInfo cameraInfo = mCameraInfoMap.get(mCameraId);
-        if (cameraInfo == null) {
-            return 0;
-        }
-
-        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            mPictureRotation = (cameraInfo.orientation - screenRotation + 360) % 360;
+        if (mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            mPictureRotation = (mSensorOrientation - screenRotation + 360) % 360;
         } else {  // back-facing camera
-            mPictureRotation = (cameraInfo.orientation + screenRotation) % 360;
+            mPictureRotation = (mSensorOrientation + screenRotation) % 360;
         }
         return mPictureRotation;
     }
@@ -640,9 +704,6 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
         Camera.Parameters mCameraParameters = mCamera.getParameters();
         if (mFlashMode != null && !mCameraParameters.getFlashMode().equals(mFlashMode)) {
             setFlashMode(mFlashMode);
-        }
-        if (mFocusMode != null && !mCameraParameters.getFocusMode().equals(mFocusMode)) {
-            setFocusMode(mFocusMode);
         }
         if (mOnCameraCallback != null) {
             mOnCameraCallback.onAutoFocus(success, camera);

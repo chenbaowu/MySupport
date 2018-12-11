@@ -1,6 +1,5 @@
 package com.cbw.mysupport;
 
-import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,16 +10,16 @@ import android.widget.TextView;
 import com.cbw.bean.User;
 import com.cbw.greendao.DaoMaster;
 import com.cbw.greendao.DaoSession;
-import com.cbw.web.test.RxJava2Test;
 import com.cbw.utils.OnAnimatorTouchListener;
 import com.cbw.web.test.RetrofitTest;
+import com.cbw.web.test.RxJava2Test;
 
 import java.util.ArrayList;
 
 /**
  * Created by cbw on 2018/11/15.
  */
-public class DbActivity extends Activity {
+public class DbActivity extends BaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

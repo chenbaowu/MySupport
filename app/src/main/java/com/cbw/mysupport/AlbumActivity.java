@@ -1,6 +1,5 @@
 package com.cbw.mysupport;
 
-import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,7 +25,7 @@ import java.util.ArrayList;
  * Created by cbw on 2017/11/23.
  */
 
-public class AlbumActivity extends Activity {
+public class AlbumActivity extends BaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

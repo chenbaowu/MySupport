@@ -1,7 +1,5 @@
 package com.cbw.mysupport;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,14 +9,13 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,18 +26,15 @@ import com.cbw.utils.OnAnimatorTouchListener;
 /**
  * Created by cbw on 2018/12/3.
  */
-public class CameraActivity extends AppCompatActivity {
-
-    private Context mContext;
+public class CameraActivity extends BaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext = this;
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_test);
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
-
+        keepScreenWakeup(true);
         init();
     }
 
@@ -61,12 +55,14 @@ public class CameraActivity extends AppCompatActivity {
 
         int screenOrientation = mContext.getResources().getConfiguration().orientation;
         if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-            surfaceView.getLayoutParams().width = 1440;
-            surfaceView.getLayoutParams().height = 1080;
+            mSurfaceWith = 1440;
+            mSurfaceHeight = 1080;
         } else {
-            surfaceView.getLayoutParams().width = 1080;
-            surfaceView.getLayoutParams().height = 1440;
+            mSurfaceWith = 1080;
+            mSurfaceHeight = 1440;
         }
+        surfaceView.getLayoutParams().width = mSurfaceWith;
+        surfaceView.getLayoutParams().height = mSurfaceHeight;
 
         surfaceView.setVisibility(View.VISIBLE);
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -89,9 +85,9 @@ public class CameraActivity extends AppCompatActivity {
                         public void onPictureTaken(byte[] data, Camera camera) {
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                             iv_pic.setImageBitmap(bitmap);
-                            iv_pic.setRotation(camera1.getPictureDegrees(mScreenRotation));
+//                            iv_pic.setRotation(camera1.getPictureDegrees(mScreenRotation));
                             iv_pic.setVisibility(View.VISIBLE);
-                            Log.i("bbb", "onPictureTaken: "+ bitmap.getWidth() + "," + bitmap.getHeight() +   " ,mScreenRotation: " + mScreenRotation);
+                            Log.i("bbb", "onPictureTaken: " + bitmap.getWidth() + "," + bitmap.getHeight() + " ,mScreenRotation: " + mScreenRotation);
                         }
 
                         @Override
@@ -106,11 +102,16 @@ public class CameraActivity extends AppCompatActivity {
                     });
                 }
                 camera1.setSurface(holder);
+                Log.i("bbb", "surfaceCreated: ");
             }
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                camera1.setPreviewSize(1080, 1440, 0);
+                if (camera1 != null) {
+                    camera1.setPreviewSize(width, height, 0);
+                    camera1.setDisplayOrientation(-1);
+                }
+                Log.i("bbb", "surfaceChanged: " + width + "," + height);
             }
 
             @Override
@@ -147,6 +148,7 @@ public class CameraActivity extends AppCompatActivity {
     private int mScreenRotation;
     private CameraV1 camera1;
     private OrientationEventListener mOrientationListener;
+    private int mSurfaceWith, mSurfaceHeight;
 
     private OnAnimatorTouchListener animatorTouchListener = new OnAnimatorTouchListener() {
         @Override
@@ -192,7 +194,7 @@ public class CameraActivity extends AppCompatActivity {
             if (v == surfaceView) {
                 iv_pic.setVisibility(View.GONE);
                 if (camera1 != null && camera1.getCamera() != null) {
-                    camera1.setFocusAndMeteringArea(event.getX(), event.getY(), event.getX(), event.getY(), 1);
+                    camera1.setFocusAndMeteringArea(event.getX(), event.getY(), event.getX(), event.getY());
                 }
                 return false;
             }
@@ -201,8 +203,32 @@ public class CameraActivity extends AppCompatActivity {
     };
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.i("bbb", "onConfigurationChanged: " + newConfig.orientation);
+        if (surfaceView != null) {
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                surfaceView.getLayoutParams().width = 1440;
+                surfaceView.getLayoutParams().height = 1080;
+            } else {
+                surfaceView.getLayoutParams().width = 1080;
+                surfaceView.getLayoutParams().height = 1440;
+            }
+            surfaceView.requestLayout();
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void keepScreenWakeup(boolean on) {
+        if (on) {
+            this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            this.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
 
 }

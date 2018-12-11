@@ -3,7 +3,6 @@ package com.cbw.mysupport;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -18,7 +17,7 @@ import com.cbw.utils.PathUtil;
 /**
  * 播放器测试demo
  */
-public class PlayerActivity extends AppCompatActivity implements SurfaceHolder.Callback, TextureView.SurfaceTextureListener {
+public class PlayerActivity extends BaseActivity implements SurfaceHolder.Callback, TextureView.SurfaceTextureListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

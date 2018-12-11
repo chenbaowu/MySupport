@@ -1,6 +1,5 @@
 package com.cbw.mysupport;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,7 +23,7 @@ import com.cbw.utils.PathUtil;
  * <p>
  * 编解码demo，只做基本测试不考虑逻辑完整性
  */
-public class MediaCodecActivity extends Activity {
+public class MediaCodecActivity extends BaseActivity {
 
     private Context mContext;
 
