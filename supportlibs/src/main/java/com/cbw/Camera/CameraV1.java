@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.math.MathUtils;
 import android.util.Log;
 import android.util.SparseArray;
@@ -22,6 +24,7 @@ import java.util.List;
 public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
 
     private Context mContext;
+    private Handler mHandler;
 
     private Camera mCamera;
     private int mCameraNumber;
@@ -83,6 +86,8 @@ public class CameraV1 implements ICamera, ICamera.OnCameraCallback {
 
     public CameraV1(Context context) {
         mContext = context;
+        Looper looper = Looper.myLooper();
+        mHandler = new Handler(looper != null ? looper : Looper.getMainLooper());
 
         getCameraInfo(-1);
     }
