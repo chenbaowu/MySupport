@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MySupport</string>
+    <string name="appwidget_text">click me</string>
+    <string name="add_widget">Add widget</string>
 </resources>

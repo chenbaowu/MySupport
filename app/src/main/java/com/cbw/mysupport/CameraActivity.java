@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.cbw.Camera.CameraV1;
 import com.cbw.Camera.ICamera;
+import com.cbw.base.BaseActivity;
 import com.cbw.utils.OnAnimatorTouchListener;
 
 /**
@@ -85,7 +86,7 @@ public class CameraActivity extends BaseActivity {
                         public void onPictureTaken(byte[] data, Camera camera) {
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                             iv_pic.setImageBitmap(bitmap);
-//                            iv_pic.setRotation(camera1.getPictureDegrees(mScreenRotation));
+                            iv_pic.setRotation(camera1.getPictureDegrees(mScreenRotation));
                             iv_pic.setVisibility(View.VISIBLE);
                             Log.i("bbb", "onPictureTaken: " + bitmap.getWidth() + "," + bitmap.getHeight() + " ,mScreenRotation: " + mScreenRotation);
                         }

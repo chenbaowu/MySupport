@@ -10,6 +10,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.widget.FrameLayout;
 
+import com.cbw.base.BaseActivity;
 import com.cbw.bean.BaseVideoInfo;
 import com.cbw.player.MediaPlayerHelper;
 import com.cbw.utils.PathUtil;

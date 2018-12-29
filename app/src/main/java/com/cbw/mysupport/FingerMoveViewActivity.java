@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.cbw.base.BaseActivity;
 import com.cbw.view.fingerMove.FingerView;
 import com.cbw.view.fingerMove.ImageShowView;
 import com.cbw.view.fingerMove.MoveViewGroup;

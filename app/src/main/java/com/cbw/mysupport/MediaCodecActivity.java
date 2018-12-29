@@ -12,6 +12,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+import com.cbw.base.BaseActivity;
 import com.cbw.mediaCodec.decode.VideoDecode;
 import com.cbw.mediaCodec.encode.VideoEncode;
 import com.cbw.player.MediaPlayerHelper;

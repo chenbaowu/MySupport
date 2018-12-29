@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.cbw.base.BaseActivity;
 import com.cbw.bean.User;
 import com.cbw.greendao.DaoMaster;
 import com.cbw.greendao.DaoSession;
@@ -46,7 +47,7 @@ public class DbActivity extends BaseActivity {
      * 初始化GreenDao
      */
     private void initGreenDao() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "aserbao.db");
+        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "bao.db");
         SQLiteDatabase db = helper.getWritableDatabase();
         DaoMaster daoMaster = new DaoMaster(db);
         daoSession = daoMaster.newSession();

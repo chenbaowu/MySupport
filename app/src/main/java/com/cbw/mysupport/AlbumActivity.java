@@ -12,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.cbw.Adapter.MyPagerAdapter;
+import com.cbw.base.BaseActivity;
 import com.cbw.recyclerView.BaseAdapter;
 import com.cbw.recyclerView.BaseItemInfo;
 import com.cbw.recyclerView.UiConfig;

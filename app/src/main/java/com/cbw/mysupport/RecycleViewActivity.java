@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.cbw.base.BaseActivity;
 import com.cbw.recyclerView.BaseUseRecycleView;
 
 /**
