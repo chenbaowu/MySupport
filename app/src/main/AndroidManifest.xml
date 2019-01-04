@@ -35,7 +35,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".CameraActivity"
+            android:name=".AlarmManagerActivity"
             android:configChanges="orientation|keyboardHidden|navigation|screenSize"
             android:exported="true"
             android:launchMode="singleTop">
@@ -134,6 +134,11 @@
             android:enabled="true"
             android:exported="true"
             android:process=":deskService" />
+
+        <service
+            android:name=".AlarmManagerActivity$ServiceTest"
+            android:exported="true"
+            android:process=":serviceTest"/>
 
         <receiver android:name=".AppWidget">
             <intent-filter>

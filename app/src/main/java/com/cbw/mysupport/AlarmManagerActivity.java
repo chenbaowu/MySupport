@@ -6,13 +6,19 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -85,7 +91,7 @@ public class AlarmManagerActivity extends BaseActivity {
                     PendingIntent resultPendingIntent = PendingIntent.getActivity(mContext, 5, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                     /*定义Notification的各种属性*/
-                    Notification.Builder mBuilder = new Notification.Builder(mContext.getApplicationContext())
+                    final Notification.Builder mBuilder = new Notification.Builder(mContext.getApplicationContext())
                             .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)        //声音uri
                             .setSmallIcon(R.mipmap.ic_launcher)                                         //设置通知的图标
                             .setTicker("有福利")                                                        //设置状态栏的标题
@@ -97,7 +103,7 @@ public class AlarmManagerActivity extends BaseActivity {
                             .setWhen(System.currentTimeMillis())                                      //设置通知时间，默认为系统发出通知的时间，通常不用设置
                             .setAutoCancel(true);                                                       //打开程序后图标消失
 //                    mBuilder.setContentIntent(resultPendingIntent);
-                    mBuilder.setFullScreenIntent(resultPendingIntent,false);
+                    mBuilder.setFullScreenIntent(resultPendingIntent, false);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         mBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
                     }
@@ -117,14 +123,6 @@ public class AlarmManagerActivity extends BaseActivity {
                     }, 1500);
                     break;
                 case R.id.btn_update:
-                    Intent intent3 = new Intent();
-                    intent3.setAction("my.alarm");
-                    Bundle bundle = new Bundle();
-                    bundle.putString("name", "cbw");
-                    intent3.putExtra("data", bundle);
-                    sendBroadcast(intent3);
-                    break;
-                case R.id.btn_find:
                     /*协议唤醒*/
                     Uri uri = Uri.parse("cbw://support.goto/album/go"); // camhomme://goto?type=inner_app&pid=1340126&is_struct=1&struct_theme_id=38933&struct_id=54580
                     Intent intent4 = new Intent();
@@ -144,37 +142,163 @@ public class AlarmManagerActivity extends BaseActivity {
                     intent4.putExtra("cbw", bundle4);
                     intent4.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent4);
+                    break;
+                case R.id.btn_find:
+//                    Intent intent3 = new Intent();
+//                    intent3.setAction("my.alarm");
+//                    Bundle bundle = new Bundle();
+//                    bundle.putString("name", "cbw");
+//                    intent3.putExtra("data", bundle);
+//                    sendBroadcast(intent3);
 
+                    startService(new Intent(mContext, ServiceTest.class));
                     break;
                 case R.id.tv_show:
-                    startService(new Intent(mContext, GrayService.class));
+//                    startService(new Intent(mContext, GrayService.class));
+
+                    bindService(new Intent(mContext, ServiceTest.class), new ServiceConnection() {
+                        @Override
+                        public void onServiceConnected(ComponentName name, IBinder service) {
+//                            myBinder = (ServiceTest.MyBinder) service;
+//                            myBinder.startBinder();
+
+//                            if (mReceiverReplyMsg == null) {
+//                                mReceiverReplyMsg = new Messenger(new MyHandler());
+//                            }
+//                            try {
+//                                Messenger messenger = new Messenger(service);
+//                                Message msg = Message.obtain(null, 0);
+//                                //把接收服务器端的回复的Messenger通过Message的replyTo参数传递给服务端
+//                                msg.replyTo = mReceiverReplyMsg;
+//                                messenger.send(msg);
+//                            } catch (RemoteException e) {
+//                                e.printStackTrace();
+//                            }
+
+                            try {
+                                myAIDLService = (IMyAidlInterface) IMyAidlInterface.Stub.asInterface(service);
+                                myAIDLService.sayWhat();
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onServiceDisconnected(ComponentName name) {
+
+                        }
+                    }, Service.BIND_AUTO_CREATE);
                     break;
             }
         }
     };
 
-    private static int count;
-
-    public static class AlarmReceiver extends BroadcastReceiver {
+    public class MyHandler extends Handler {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            Toast.makeText(context, "i am alarm", Toast.LENGTH_LONG).show();
-            Log.i("bbb", "onReceive: " + count);
-
-            if (++count > 100) {
-                cancelAlarm(context);
-                Log.i("bbb", "AlarmManager Cancel: ");
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    Log.i("bbb", "receive message from service: " + msg.getData().getString("cbw"));
+                    break;
             }
         }
     }
 
-    private static void cancelAlarm(Context context) {
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent2 = new Intent(context, AlarmReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent2, PendingIntent.FLAG_CANCEL_CURRENT);
-        am.cancel(sender);
+    /**
+     * 用于接收服务器返回的信息
+     */
+    private Messenger mReceiverReplyMsg;
+
+    private ServiceTest.MyBinder myBinder;
+
+    private IMyAidlInterface myAIDLService;
+
+    /**
+     * service aidl
+     */
+    public static class ServiceTest extends Service {
+
+        MyBinder myBinder = new MyBinder(); // 同一进程使用
+
+        Messenger messenger; // 不同一进程使用
+
+        /**
+         * 用于接收从客户端传递过来的数据
+         */
+        public static class IpcHandle extends Handler {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case 0:
+                        Log.i("bbb", "receive message from client: ");
+
+                        // 回复客户端消息
+                        Messenger client = msg.replyTo;
+                        Message message = Message.obtain(null, 0);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("cbw", "008");
+                        message.setData(bundle);
+                        try {
+                            client.send(message);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                }
+            }
+        }
+
+        IMyAidlInterface.Stub myAidlInterface = new IMyAidlInterface.Stub() {
+            @Override
+            public void sayWhat() throws RemoteException {
+                Log.i("bbb", "i am Aidl");
+            }
+        };
+
+        @Override
+        public void onCreate() {
+            super.onCreate();
+            Log.i("bbb", "Service onCreate: ");
+            messenger = new Messenger(new IpcHandle());
+
+            Intent intent = new Intent(this, AlbumActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
+        @Override
+        public IBinder onBind(Intent intent) {
+//            return myBinder;
+//            return messenger.getBinder();
+            Log.i("bbb", "Service onBind: ");
+            return myAidlInterface;
+        }
+
+        @Override
+        public int onStartCommand(Intent intent, int flags, int startId) {
+            Log.i("bbb", "Service onStartCommand: ");
+            return START_REDELIVER_INTENT;
+        }
+
+        @Override
+        public void onDestroy() {
+            Log.i("bbb", "Service onDestroy: ");
+            super.onDestroy();
+        }
+
+        public class MyBinder extends Binder {
+
+            // 返回当前对象ServiceTest,这样我们就可在客户端端调用Service的公共方法了
+            public ServiceTest startBinder() {
+                Log.i("bbb", "startBinder: ");
+                return ServiceTest.this;
+            }
+        }
     }
 
+    /**
+     * 保活方式，前台进程
+     */
     public static class GrayService extends Service {
 
         private final static int GRAY_SERVICE_ID = 1001;
@@ -215,8 +339,30 @@ public class AlarmManagerActivity extends BaseActivity {
             public IBinder onBind(Intent intent) {
                 return null;
             }
-
         }
+
+    }
+
+    private static int count;
+
+    public static class AlarmReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context, "i am alarm", Toast.LENGTH_LONG).show();
+            Log.i("bbb", "onReceive: " + count);
+
+            if (++count > 100) {
+                cancelAlarm(context);
+                Log.i("bbb", "AlarmManager Cancel: ");
+            }
+        }
+    }
+
+    private static void cancelAlarm(Context context) {
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent2 = new Intent(context, AlarmReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent2, PendingIntent.FLAG_CANCEL_CURRENT);
+        am.cancel(sender);
     }
 
 }
