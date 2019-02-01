@@ -35,7 +35,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".AlarmManagerActivity"
+            android:name=".DbActivity"
             android:configChanges="orientation|keyboardHidden|navigation|screenSize"
             android:exported="true"
             android:launchMode="singleTop">
@@ -90,7 +90,7 @@
         </activity>
 
         <activity
-            android:name=".DbActivity"
+            android:name=".RecycleViewActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

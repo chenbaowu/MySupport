@@ -3,19 +3,15 @@ package com.cbw.mysupport;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.cbw.base.BaseActivity;
-import com.cbw.bean.User;
+import com.cbw.bean.UserGoods;
 import com.cbw.greendao.DaoMaster;
 import com.cbw.greendao.DaoSession;
+import com.cbw.greendao.GreenDaoHelper;
 import com.cbw.utils.OnAnimatorTouchListener;
-import com.cbw.web.test.RetrofitTest;
-import com.cbw.web.test.RxJava2Test;
-
-import java.util.ArrayList;
 
 /**
  * Created by cbw on 2018/11/15.
@@ -68,29 +64,44 @@ public class DbActivity extends BaseActivity {
             switch (v.getId()) {
                 case R.id.btn_add:
                     try {
-                        User user = new User();
-                        user.setId(i++);
-                        user.setStudentNo((int) i++);
-                        user.setName("abc");
-                        daoSession.insert(user);
+//                        User user = new User();
+//                        user.setId(i++);
+//                        user.setStudentNo((int) i++);
+//                        user.setName("abc");
+//                        daoSession.insert(user);
+
+                        UserGoods userGoods = new UserGoods();
+                        userGoods.setUserID("cbw");
+                        userGoods.setGoodsID("g1");
+                        GreenDaoHelper.getInstance().getUserGoodsDaoManage().insert(userGoods);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
                 case R.id.btn_delete:
-                    daoSession.getUserDao().deleteAll();
+//                    daoSession.getUserDao().deleteAll();
 
-                    new RxJava2Test().init();
+//                    new RxJava2Test().init();
+
+                    UserGoods userGoods = new UserGoods();
+                    userGoods.setUserID("null");
+                    try {
+                        GreenDaoHelper.getInstance().getUserGoodsDaoManage().delete(userGoods);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case R.id.btn_update:
+                    try {
+                        GreenDaoHelper.getInstance().getUserGoodsDaoManage().findUniqueData("cbw", "g1");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case R.id.btn_find:
-                    ArrayList<User> users = (ArrayList<User>) daoSession.getUserDao().loadAll();
-                    for (int j = 0; j < users.size(); j++) {
-                        Log.i("bbb", "user: " + users.get(j).toString());
-                    }
+                    GreenDaoHelper.getInstance().getUserGoodsDaoManage().findData(null, null);
 
-                    new RetrofitTest();
+//                    new RetrofitTest();
                     break;
             }
         }

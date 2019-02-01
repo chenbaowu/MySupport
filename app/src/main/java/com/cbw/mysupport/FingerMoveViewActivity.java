@@ -23,6 +23,7 @@ public class FingerMoveViewActivity extends BaseActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_myview);
         initView();
+        getTask();
     }
 
     private RelativeLayout rl_contentView;

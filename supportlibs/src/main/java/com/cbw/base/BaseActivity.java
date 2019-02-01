@@ -1,21 +1,26 @@
 package com.cbw.base;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.cbw.utils.ShareData;
+
+import java.util.List;
 
 /**
  * Created by cbw on 2018/12/10.
@@ -85,5 +90,17 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+    }
+
+    public void getTask(){
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
+            Log.i("bbb", "appTasks: " + appTasks.size());
+        }
+        List<ActivityManager.RunningTaskInfo> runningTasks = activityManager.getRunningTasks(100);
+        Log.i("bbb", "runningTasks: " + runningTasks.size());
+        List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
+        Log.i("bbb", "runningAppProcesses: " + runningAppProcesses.size());
     }
 }

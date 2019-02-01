@@ -123,6 +123,10 @@ public class AlarmManagerActivity extends BaseActivity {
                     }, 1500);
                     break;
                 case R.id.btn_update:
+
+                    getTask();
+
+
                     /*协议唤醒*/
                     Uri uri = Uri.parse("cbw://support.goto/album/go"); // camhomme://goto?type=inner_app&pid=1340126&is_struct=1&struct_theme_id=38933&struct_id=54580
                     Intent intent4 = new Intent();

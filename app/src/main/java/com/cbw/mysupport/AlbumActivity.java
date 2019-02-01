@@ -1,5 +1,6 @@
 package com.cbw.mysupport;
 
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -38,6 +39,7 @@ public class AlbumActivity extends BaseActivity {
 
         AlbumUtils.InitAlbumData(this);
         initView();
+        getTask();
     }
 
     private void initView() {
@@ -93,10 +95,7 @@ public class AlbumActivity extends BaseActivity {
         });
 
         ArrayList<BaseItemInfo> baseItemInfoList = new ArrayList<>();
-        for (
-                int i = 0; i < AlbumUtils.mAlbumBeans.size(); i++)
-
-        {
+        for (int i = 0; i < AlbumUtils.mAlbumBeans.size(); i++) {
             BaseItemInfo baseItemInfo = new BaseItemInfo();
             baseItemInfo.mItemType = BaseAdapter.ItemType_Base;
 //            baseItemInfo.mRes = AlbumUtils.mAlbumBeans.get(i).mImagePath;
@@ -115,6 +114,8 @@ public class AlbumActivity extends BaseActivity {
 
             m_viewPage.setCurrentItem(position, false);
             m_viewPage.setVisibility(View.VISIBLE);
+
+            startActivity(new Intent(mContext,FingerMoveViewActivity.class));
         }
     };
 

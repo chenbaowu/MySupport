@@ -3,6 +3,7 @@ package com.cbw.App;
 import android.app.Application;
 import android.util.Log;
 
+import com.cbw.greendao.GreenDaoHelper;
 import com.cbw.utils.ShareData;
 import com.cbw.utils.Utils;
 
@@ -21,6 +22,7 @@ public class MyApplication extends Application {
         String mCurrentProcessName = Utils.GetProcessName(this);
         if (mCurrentProcessName != null && mCurrentProcessName.equals(getPackageName())) {
             Log.i("bbb", "这是主进程");
+            GreenDaoHelper.getInstance().init(this);
         }
         ShareData.InitData(this);
     }
