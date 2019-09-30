@@ -35,7 +35,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".DbActivity"
+            android:name=".CameraActivity"
             android:configChanges="orientation|keyboardHidden|navigation|screenSize"
             android:exported="true"
             android:launchMode="singleTop">

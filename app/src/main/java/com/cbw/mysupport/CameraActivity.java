@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Outline;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -43,6 +45,20 @@ public class CameraActivity extends BaseActivity {
     private SurfaceView surfaceView;
     private ImageView iv_pic;
 
+    public class TextureVideoViewOutlineProvider extends ViewOutlineProvider {
+        private float mRadius;
+
+        public TextureVideoViewOutlineProvider(float radius) {
+            this.mRadius = radius;
+        }
+
+        @Override
+        public void getOutline(View view, Outline outline) {
+            final int margin = Math.min(view.getWidth(), view.getHeight()) / 10;
+            outline.setRoundRect(margin, margin, view.getWidth() - margin, view.getHeight() - margin, mRadius);
+        }
+    }
+
     private void init() {
         this.findViewById(R.id.btn_add).setOnTouchListener(animatorTouchListener);
         this.findViewById(R.id.btn_delete).setOnTouchListener(animatorTouchListener);
@@ -53,6 +69,9 @@ public class CameraActivity extends BaseActivity {
         tv_show.setOnTouchListener(animatorTouchListener);
         surfaceView = this.findViewById(R.id.surfaceView);
         surfaceView.setOnTouchListener(animatorTouchListener);
+
+        surfaceView.setOutlineProvider(new TextureVideoViewOutlineProvider(100));
+        surfaceView.setClipToOutline(true);
 
         int screenOrientation = mContext.getResources().getConfiguration().orientation;
         if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {

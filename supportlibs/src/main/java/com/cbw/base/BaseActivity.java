@@ -69,12 +69,12 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (ShareData.m_HasNotch) {
-            ShareData.setStatusBarColor(this, Color.TRANSPARENT);
-        } else {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
+//        if (ShareData.m_HasNotch) {
+//            ShareData.setStatusBarColor(this, Color.TRANSPARENT);
+//        } else {
+//            Window window = getWindow();
+//            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        }
     }
 
     @Override

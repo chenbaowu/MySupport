@@ -35,7 +35,6 @@ public class AlbumUtils {
         }
 
         if (cursor != null) {
-
             while (cursor.moveToNext()) {
                 AlbumBean albumBean = new AlbumBean();
                 albumBean.mImageID = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
@@ -47,9 +46,7 @@ public class AlbumUtils {
                 albumBean.mImagedSize = cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.SIZE));
                 mAlbumBeans.add(albumBean);
             }
-
             Log.i("bbb", "album size: " + mAlbumBeans.size());
-
             cursor.close();
         }
     }

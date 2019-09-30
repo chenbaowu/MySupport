@@ -3,12 +3,9 @@
     android:shape="rectangle"
     android:useLevel="true">
 
-    <!--<size android:height="72dp"
-        android:width="198dp"/>-->
-
     <solid android:color="#ff3c00" />
-
-    <corners android:bottomLeftRadius="36dp"
+    <corners
+        android:bottomLeftRadius="36dp"
         android:bottomRightRadius="36dp"
         android:topLeftRadius="36dp"
         android:topRightRadius="36dp" />

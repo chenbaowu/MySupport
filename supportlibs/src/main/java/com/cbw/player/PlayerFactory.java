@@ -7,5 +7,5 @@ import android.content.Context;
  */
 public interface PlayerFactory {
 
-    IPlayer CreatePlyer(Context context);
+    IPlayer CreatePlayer(Context context);
 }
